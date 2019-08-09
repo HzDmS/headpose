@@ -234,7 +234,7 @@ if __name__ == '__main__':
          {'params': get_fc_params(model), 'lr': args.lr * 5}],
         lr=args.lr)
 
-    print 'Ready to train network.'
+    print('Ready to train network.')
     for epoch in range(num_epochs):
         for i, (images, labels, cont_labels, name) in enumerate(train_loader):
             images = Variable(images).cuda(gpu)
