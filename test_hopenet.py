@@ -169,6 +169,11 @@ if __name__ == '__main__':
         label_pitch = cont_labels[:, 1].float()
         label_roll = cont_labels[:, 2].float()
 
+        if torch.abs(label_yaw) > 99 or \
+           torch.abs(label_yaw) > 99 or \
+           torch.abs(label_yaw) > 99:
+            continue
+
         yaw, pitch, roll = model(images)
 
         # Binned predictions
