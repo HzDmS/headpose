@@ -72,6 +72,7 @@ class Hopenet(nn.Module):
 
         return pre_yaw, pre_pitch, pre_roll
 
+
 class ResNet(nn.Module):
     # ResNet for regression of 3 Euler angles.
     def __init__(self, block, layers, num_classes=1000):
@@ -130,6 +131,7 @@ class ResNet(nn.Module):
         x = self.fc_angles(x)
         return x
 
+
 class AlexNet(nn.Module):
     # AlexNet laid out as a Hopenet - classify Euler angles in bins and
     # regress the expected value.
@@ -170,3 +172,15 @@ class AlexNet(nn.Module):
         pitch = self.fc_pitch(x)
         roll = self.fc_roll(x)
         return yaw, pitch, roll
+
+
+if __name__ == "__main__":
+
+    import torchvision
+
+    model = Hopenet(
+        torchvision.models.resnet.Bottleneck,
+        [3, 4, 6, 3],
+        66
+    )
+    print(model)
