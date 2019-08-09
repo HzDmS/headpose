@@ -220,7 +220,8 @@ if __name__ == '__main__':
 
     model.cuda(gpu)
     criterion = nn.CrossEntropyLoss().cuda(gpu)
-    reg_criterion = BalancedL1Loss().cuda(gpu)
+    # reg_criterion = BalancedL1Loss().cuda(gpu)
+    reg_criterion = nn.MSELoss().cuda(gpu)
     # Regression loss coefficient
     alpha = args.alpha
 
