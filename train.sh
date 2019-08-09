@@ -6,4 +6,4 @@ python train_hopenet.py \
 --dataset Pose_300W_LP \
 --data_dir ./data/300W_LP/ \
 --filename_list ./data/300W_LP/filename_list.txt \
---aplha 2 \
+--alpha 2 \
