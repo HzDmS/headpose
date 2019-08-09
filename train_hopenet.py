@@ -276,7 +276,7 @@ if __name__ == '__main__':
             loss_roll += alpha * loss_reg_roll
 
             loss_seq = [loss_yaw, loss_pitch, loss_roll]
-            grad_seq = [torch.tensor(1).cuda(gpu) for _ in range(len(loss_seq))]
+            grad_seq = [torch.tensor(1.0).cuda(gpu) for _ in range(len(loss_seq))]
             optimizer.zero_grad()
             torch.autograd.backward(loss_seq, grad_seq)
             optimizer.step()
