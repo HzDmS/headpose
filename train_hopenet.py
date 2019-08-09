@@ -210,7 +210,7 @@ if __name__ == '__main__':
             transformations)
 
     else:
-        print 'Error: not a valid dataset name'
+        print('Error: not a valid dataset name')
         sys.exit()
 
     train_loader = torch.utils.data.DataLoader(dataset=pose_dataset,
