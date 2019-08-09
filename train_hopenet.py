@@ -220,12 +220,12 @@ if __name__ == '__main__':
 
     model.cuda(gpu)
     criterion = nn.CrossEntropyLoss().cuda(gpu)
-    reg_criterion = BalancedL1Loss.cuda(gpu)
+    reg_criterion = BalancedL1Loss().cuda(gpu)
     # Regression loss coefficient
     alpha = args.alpha
 
     softmax = nn.Softmax().cuda(gpu)
-    idx_tensor = [idx for idx in xrange(66)]
+    idx_tensor = [idx for idx in range(66)]
     idx_tensor = Variable(torch.FloatTensor(idx_tensor)).cuda(gpu)
 
     optimizer = torch.optim.Adam(

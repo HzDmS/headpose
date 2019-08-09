@@ -4,7 +4,8 @@ import os
 import glob
 import argparse
 
-SUBFOLDERS = ['AFW', 'HELEN', 'LFPW', 'IBUG']
+SUBFOLDERS = ['AFW', 'AFW_Flip', 'HELEN', 'HELEN_Flip',
+              'LFPW', 'LFPW_Flip', 'IBUG', 'IBUG_Flip']
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -22,5 +23,5 @@ with open(os.path.join(args.dataset_path, "filename_list.txt"), "w") as writer:
             base_name = os.path.basename(f).split(".")[0]
             writer.write(
                 os.path.join(args.dataset_path, folder, base_name) + "\n")
-            writer.write(
-                os.path.join(args.dataset_path, folder + "_Flip", base_name) + "\n")
+            # writer.write(
+            #     os.path.join(args.dataset_path, folder + "_Flip", base_name) + "\n")
