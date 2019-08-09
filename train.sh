@@ -1,8 +1,8 @@
 python train_hopenet.py \
 --gpu 0 \
 --num_epochs 25 \
---batch_size 16 \
---lr 0.00001 \
+--batch_size 64 \
+--lr 0.001 \
 --dataset Pose_300W_LP \
 --data_dir ./data/300W_LP/ \
 --filename_list ./data/300W_LP/filename_list.txt \
