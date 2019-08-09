@@ -10,6 +10,7 @@ import torch.utils.model_zoo as model_zoo
 
 import datasets
 import hopenet
+import utils
 
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
@@ -209,8 +210,19 @@ if __name__ == '__main__':
         print('Error: not a valid dataset name')
         sys.exit()
 
+    train_size = int(0.9 * len(pose_dataset))
+    valid_size = len(pose_dataset) - train_size
+    train_dataset, valid_dataset = torch.utils.data.random_split(
+        pose_dataset, [train_size, valid_size])
+
     train_loader = DataLoader(
-        dataset=pose_dataset,
+        dataset=train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=2)
+
+    valid_loader = DataLoader(
+        dataset=valid_dataset,
         batch_size=batch_size,
         shuffle=True,
         num_workers=2)
@@ -233,6 +245,7 @@ if __name__ == '__main__':
         lr=args.lr)
 
     print('Ready to train network.')
+
     for epoch in range(num_epochs):
         for i, (images, labels, cont_labels, name) in enumerate(train_loader):
             images = Variable(images).cuda(gpu)
@@ -286,5 +299,43 @@ if __name__ == '__main__':
         # Save models at numbered epochs.
         if epoch % 1 == 0 and epoch < num_epochs:
             print('Taking snapshot...')
-            torch.save(model.state_dict(),
-            'output/snapshots/' + args.output_string + '_epoch_'+ str(epoch+1) + '.pkl')
+            torch.save(
+                model.state_dict(),
+                'output/snapshots/' + args.output_string +
+                '_epoch_' + str(epoch+1) + '.pkl')
+
+            total, yaw_error, pitch_error, roll_error = 0, 0.0, 0.0, 0.0
+
+            for i, (images, labels,
+                    cont_labels, name) in enumerate(valid_loader):
+                images = Variable(images).cuda(gpu)
+                total += cont_labels.size(0)
+
+                label_yaw = cont_labels[:, 0].float()
+                label_pitch = cont_labels[:, 1].float()
+                label_roll = cont_labels[:, 2].float()
+
+                yaw, pitch, roll = model(images)
+
+                # Binned predictions
+                _, yaw_bpred = torch.max(yaw.data, 1)
+                _, pitch_bpred = torch.max(pitch.data, 1)
+                _, roll_bpred = torch.max(roll.data, 1)
+
+                # Continuous predictions
+                yaw_predicted = utils.softmax_temperature(yaw.data, 1)
+                pitch_predicted = utils.softmax_temperature(pitch.data, 1)
+                roll_predicted = utils.softmax_temperature(roll.data, 1)
+
+                yaw_predicted = torch.sum(yaw_predicted * idx_tensor, 1).cpu() * 3 - 99
+                pitch_predicted = torch.sum(pitch_predicted * idx_tensor, 1).cpu() * 3 - 99
+                roll_predicted = torch.sum(roll_predicted * idx_tensor, 1).cpu() * 3 - 99
+
+                # Mean absolute error
+                yaw_error += torch.sum(torch.abs(yaw_predicted - label_yaw))
+                pitch_error += torch.sum(torch.abs(pitch_predicted - label_pitch))
+                roll_error += torch.sum(torch.abs(roll_predicted - label_roll))
+        
+            print('Test error in degrees of the model on the ' + str(total) +
+            ' test images. Yaw: %.4f, Pitch: %.4f, Roll: %.4f' % (yaw_error / total,
+            pitch_error / total, roll_error / total))
