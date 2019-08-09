@@ -8,7 +8,6 @@ import torch.nn.functional as F
 from math import cos, sin
 
 
-
 def balanced_l1_loss(pred,
                      target,
                      beta=1.0,
@@ -35,7 +34,7 @@ def balanced_l1_loss(pred,
         return loss.sum()
 
 
-class BalancedL1Loss(nn.modules.loss._Loss):
+class BalancedL1Loss(nn.Module):
     """Balanced L1 Loss
     arXiv: https://arxiv.org/pdf/1904.02701.pdf (CVPR 2019)
     """
