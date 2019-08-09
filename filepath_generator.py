@@ -22,6 +22,6 @@ with open(os.path.join(args.dataset_path, "filename_list.txt"), "w") as writer:
         for f in files:
             base_name = os.path.basename(f).split(".")[0]
             writer.write(
-                os.path.join(args.dataset_path, folder, base_name) + "\n")
+                os.path.join(folder, base_name) + "\n")
             # writer.write(
             #     os.path.join(args.dataset_path, folder + "_Flip", base_name) + "\n")
