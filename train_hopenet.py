@@ -294,7 +294,7 @@ if __name__ == '__main__':
 
             if (i + 1) % 100 == 0:
                 print('Epoch [%d/%d], Iter [%d/%d] Losses: Yaw %.4f, Pitch %.4f, Roll %.4f'
-                       %(epoch+1, num_epochs, i+1, len(pose_dataset)//batch_size, loss_yaw.data[0], loss_pitch.data[0], loss_roll.data[0]))
+                       %(epoch+1, num_epochs, i+1, len(train_dataset) // batch_size, loss_yaw.data[0], loss_pitch.data[0], loss_roll.data[0]))
 
         # Save models at numbered epochs.
         if epoch % 1 == 0 and epoch < num_epochs:
