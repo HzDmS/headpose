@@ -333,7 +333,7 @@ if __name__ == '__main__':
                 yaw_error += torch.sum(torch.abs(yaw_predicted - label_yaw))
                 pitch_error += torch.sum(torch.abs(pitch_predicted - label_pitch))
                 roll_error += torch.sum(torch.abs(roll_predicted - label_roll))
-        
+
             print('Test error in degrees of the model on the ' + str(total) +
             ' test images. Yaw: %.4f, Pitch: %.4f, Roll: %.4f' % (yaw_error / total,
             pitch_error / total, roll_error / total))
