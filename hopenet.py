@@ -4,6 +4,7 @@ from torch.autograd import Variable
 import math
 import torch.nn.functional as F
 
+
 class Hopenet(nn.Module):
     # Hopenet with 3 output layers for yaw, pitch and roll
     # Predicts Euler angles by binning and regression with the expected value

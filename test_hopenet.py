@@ -1,4 +1,6 @@
-import sys, os, argparse
+import sys
+import os
+import argparse
 
 import numpy as np
 import cv2
@@ -13,28 +15,61 @@ import torch.backends.cudnn as cudnn
 import torchvision
 import torch.nn.functional as F
 
-import datasets, hopenet, utils
+import datasets
+import hopenet
+import utils
+
 
 def parse_args():
     """Parse input arguments."""
-    parser = argparse.ArgumentParser(description='Head pose estimation using the Hopenet network.')
-    parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
-            default=0, type=int)
-    parser.add_argument('--data_dir', dest='data_dir', help='Directory path for data.',
-          default='', type=str)
-    parser.add_argument('--filename_list', dest='filename_list', help='Path to text file containing relative paths for every example.',
-          default='', type=str)
-    parser.add_argument('--snapshot', dest='snapshot', help='Name of model snapshot.',
-          default='', type=str)
-    parser.add_argument('--batch_size', dest='batch_size', help='Batch size.',
-          default=1, type=int)
-    parser.add_argument('--save_viz', dest='save_viz', help='Save images with pose cube.',
-          default=False, type=bool)
-    parser.add_argument('--dataset', dest='dataset', help='Dataset type.', default='AFLW2000', type=str)
+    parser = argparse.ArgumentParser(
+        description='Head pose estimation using the Hopenet network.')
+    parser.add_argument(
+        '--gpu',
+        dest='gpu_id',
+        help='GPU device id to use [0]',
+        default=0, type=int)
+    parser.add_argument(
+        '--data_dir',
+        dest='data_dir',
+        help='Directory path for data.',
+        default='',
+        type=str)
+    parser.add_argument(
+        '--filename_list',
+        dest='filename_list',
+        help='Path to text file containing relative paths for every example.',
+        default='',
+        type=str)
+    parser.add_argument(
+        '--snapshot',
+        dest='snapshot',
+        help='Name of model snapshot.',
+        default='',
+        type=str)
+    parser.add_argument(
+        '--batch_size',
+        dest='batch_size',
+        help='Batch size.',
+        default=1,
+        type=int)
+    parser.add_argument(
+        '--save_viz',
+        dest='save_viz',
+        help='Save images with pose cube.',
+        default=False,
+        type=bool)
+    parser.add_argument(
+        '--dataset',
+        dest='dataset',
+        help='Dataset type.',
+        default='AFLW2000',
+        type=str)
 
     args = parser.parse_args()
 
     return args
+
 
 if __name__ == '__main__':
     args = parse_args()
@@ -46,49 +81,78 @@ if __name__ == '__main__':
     # ResNet50 structure
     model = hopenet.Hopenet(torchvision.models.resnet.Bottleneck, [3, 4, 6, 3], 66)
 
-    print 'Loading snapshot.'
+    print('Loading snapshot.')
     # Load snapshot
     saved_state_dict = torch.load(snapshot_path)
     model.load_state_dict(saved_state_dict)
 
-    print 'Loading data.'
+    print('Loading data.')
 
-    transformations = transforms.Compose([transforms.Scale(224),
-    transforms.CenterCrop(224), transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+    transformations = transforms.Compose(
+        [transforms.Scale(224),
+         transforms.CenterCrop(224),
+         transforms.ToTensor(),
+         transforms.Normalize(
+             mean=[0.485, 0.456, 0.406],
+             std=[0.229, 0.224, 0.225])])
 
     if args.dataset == 'Pose_300W_LP':
-        pose_dataset = datasets.Pose_300W_LP(args.data_dir, args.filename_list, transformations)
+        pose_dataset = datasets.Pose_300W_LP(
+            args.data_dir,
+            args.filename_list,
+            transformations)
     elif args.dataset == 'Pose_300W_LP_random_ds':
-        pose_dataset = datasets.Pose_300W_LP_random_ds(args.data_dir, args.filename_list, transformations)
+        pose_dataset = datasets.Pose_300W_LP_random_ds(
+            args.data_dir,
+            args.filename_list,
+            transformations)
     elif args.dataset == 'AFLW2000':
-        pose_dataset = datasets.AFLW2000(args.data_dir, args.filename_list, transformations)
+        pose_dataset = datasets.AFLW2000(
+            args.data_dir,
+            args.filename_list,
+            transformations)
     elif args.dataset == 'AFLW2000_ds':
-        pose_dataset = datasets.AFLW2000_ds(args.data_dir, args.filename_list, transformations)
+        pose_dataset = datasets.AFLW2000_ds(
+            args.data_dir,
+            args.filename_list,
+            transformations)
     elif args.dataset == 'BIWI':
-        pose_dataset = datasets.BIWI(args.data_dir, args.filename_list, transformations)
+        pose_dataset = datasets.BIWI(
+            args.data_dir,
+            args.filename_list,
+            transformations)
     elif args.dataset == 'AFLW':
-        pose_dataset = datasets.AFLW(args.data_dir, args.filename_list, transformations)
+        pose_dataset = datasets.AFLW(
+            args.data_dir,
+            args.filename_list,
+            transformations)
     elif args.dataset == 'AFLW_aug':
-        pose_dataset = datasets.AFLW_aug(args.data_dir, args.filename_list, transformations)
+        pose_dataset = datasets.AFLW_aug(
+            args.data_dir,
+            args.filename_list,
+            transformations)
     elif args.dataset == 'AFW':
-        pose_dataset = datasets.AFW(args.data_dir, args.filename_list, transformations)
+        pose_dataset = datasets.AFW(
+            args.data_dir,
+            args.filename_list,
+            transformations)
     else:
-        print 'Error: not a valid dataset name'
+        print('Error: not a valid dataset name')
         sys.exit()
-    test_loader = torch.utils.data.DataLoader(dataset=pose_dataset,
-                                               batch_size=args.batch_size,
-                                               num_workers=2)
+    test_loader = torch.utils.data.DataLoader(
+        dataset=pose_dataset,
+        batch_size=args.batch_size,
+        num_workers=2)
 
     model.cuda(gpu)
 
-    print 'Ready to test network.'
+    print('Ready to test network.')
 
     # Test the Model
     model.eval()  # Change model to 'eval' mode (BN uses moving mean/var).
     total = 0
 
-    idx_tensor = [idx for idx in xrange(66)]
+    idx_tensor = [idx for idx in range(66)]
     idx_tensor = torch.FloatTensor(idx_tensor).cuda(gpu)
 
     yaw_error = .0
@@ -101,9 +165,9 @@ if __name__ == '__main__':
         images = Variable(images).cuda(gpu)
         total += cont_labels.size(0)
 
-        label_yaw = cont_labels[:,0].float()
-        label_pitch = cont_labels[:,1].float()
-        label_roll = cont_labels[:,2].float()
+        label_yaw = cont_labels[:, 0].float()
+        label_pitch = cont_labels[:, 1].float()
+        label_roll = cont_labels[:, 2].float()
 
         yaw, pitch, roll = model(images)
 

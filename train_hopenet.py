@@ -1,23 +1,19 @@
 import sys
 import os
 import argparse
-import time
 
-import numpy as np
-import cv2
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-from torch.utils.data import DataLoader
-from torchvision import transforms
 import torchvision
 import torch.backends.cudnn as cudnn
-import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
 
 import datasets
 import hopenet
+
+from torch.autograd import Variable
+from torch.utils.data import DataLoader
+from torchvision import transforms
 
 from utils import BalancedL1Loss
 
@@ -213,15 +209,16 @@ if __name__ == '__main__':
         print('Error: not a valid dataset name')
         sys.exit()
 
-    train_loader = torch.utils.data.DataLoader(dataset=pose_dataset,
-                                               batch_size=batch_size,
-                                               shuffle=True,
-                                               num_workers=2)
+    train_loader = DataLoader(
+        dataset=pose_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=2)
 
     model.cuda(gpu)
     criterion = nn.CrossEntropyLoss().cuda(gpu)
-    # reg_criterion = BalancedL1Loss().cuda(gpu)
-    reg_criterion = nn.MSELoss().cuda(gpu)
+    reg_criterion = BalancedL1Loss().cuda(gpu)
+    # reg_criterion = nn.MSELoss().cuda(gpu)
     # Regression loss coefficient
     alpha = args.alpha
 
