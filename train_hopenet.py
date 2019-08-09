@@ -16,8 +16,6 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from utils import BalancedL1Loss
-
 
 def parse_args():
     """Parse input arguments."""
@@ -229,7 +227,7 @@ if __name__ == '__main__':
 
     model.cuda(gpu)
     criterion = nn.CrossEntropyLoss().cuda(gpu)
-    reg_criterion = BalancedL1Loss().cuda(gpu)
+    reg_criterion = nn.SmoothL1Loss().cuda(gpu)
     # reg_criterion = nn.MSELoss().cuda(gpu)
     # Regression loss coefficient
     alpha = args.alpha
