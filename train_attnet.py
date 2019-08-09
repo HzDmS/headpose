@@ -4,11 +4,11 @@ import argparse
 
 import torch
 import torch.nn as nn
-import torchvision
 import torch.backends.cudnn as cudnn
 import torch.utils.model_zoo as model_zoo
 
 import datasets
+import utils
 
 from model_resnet import ResidualNet
 from torch.autograd import Variable
@@ -329,7 +329,7 @@ if __name__ == '__main__':
                 yaw_error += torch.sum(torch.abs(yaw_predicted - label_yaw))
                 pitch_error += torch.sum(torch.abs(pitch_predicted - label_pitch))
                 roll_error += torch.sum(torch.abs(roll_predicted - label_roll))
-        
+
             print('Test error in degrees of the model on the ' + str(total) +
             ' test images. Yaw: %.4f, Pitch: %.4f, Roll: %.4f' % (yaw_error / total,
             pitch_error / total, roll_error / total))
