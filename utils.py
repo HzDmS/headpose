@@ -13,7 +13,7 @@ def balanced_l1_loss(pred,
                      beta=1.0,
                      alpha=0.5,
                      gamma=1.5,
-                     reduction='mean'):
+                     reduction='elementwise_mean'):
     assert beta > 0
     assert pred.size() == target.size() and target.numel() > 0
 
@@ -43,7 +43,7 @@ class BalancedL1Loss(nn.Module):
                  alpha=0.5,
                  gamma=1.5,
                  beta=1.0,
-                 reduction='mean',
+                 reduction='elementwise_mean',
                  loss_weight=1.0):
         super(BalancedL1Loss, self).__init__()
         self.alpha = alpha
@@ -58,7 +58,7 @@ class BalancedL1Loss(nn.Module):
                 weight=None,
                 reduction_override=None,
                 **kwargs):
-        assert reduction_override in (None, 'none', 'mean', 'sum')
+        assert reduction_override in (None, 'none', 'elementwise_mean', 'sum')
         reduction = (
             reduction_override if reduction_override else self.reduction)
         loss_bbox = self.loss_weight * balanced_l1_loss(
