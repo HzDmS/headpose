@@ -162,14 +162,16 @@ if __name__ == '__main__':
     l1loss = torch.nn.L1Loss(size_average=False)
 
     for i, (images, labels, cont_labels, name) in enumerate(test_loader):
-        images = Variable(images).cuda(gpu)
-        total += cont_labels.size(0)
 
-        label_yaw = cont_labels[:, 0].float()
-        label_pitch = cont_labels[:, 1].float()
-        label_roll = cont_labels[:, 2].float()
+        with torch.no_grad():
+            images = Variable(images).cuda(gpu)
+            total += cont_labels.size(0)
 
-        yaw, pitch, roll = model(images)
+            label_yaw = cont_labels[:, 0].float()
+            label_pitch = cont_labels[:, 1].float()
+            label_roll = cont_labels[:, 2].float()
+
+            yaw, pitch, roll = model(images)
 
         # Binned predictions
         _, yaw_bpred = torch.max(yaw.data, 1)
