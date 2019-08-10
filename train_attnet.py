@@ -8,12 +8,13 @@ import torch.backends.cudnn as cudnn
 import torch.utils.model_zoo as model_zoo
 
 import datasets
+import utils
 
 from model_resnet import ResidualNet
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from torch.optim.lr_scheduler import StepLR
+from torch.optim.lr_scheduler import MultiStepLR
 
 
 def parse_args():
@@ -120,6 +121,111 @@ def load_filtered_state_dict(model, snapshot):
     snapshot = {k: v for k, v in snapshot.items() if k in model_dict}
     model_dict.update(snapshot)
     model.load_state_dict(model_dict)
+
+
+def compute_loss(args, axis, labels, cont_labels, preds, cls_criterion,
+                 reg_criterion, idx_tensor, gpu):
+
+    if axis == "yaw":
+        dim = 0
+    elif axis == "pitch":
+        dim = 1
+    elif axis == "roll":
+        dim = 2
+    else:
+        raise IndexError("{} is not in ['yaw', 'pitch', 'roll']".format(axis))
+
+    label = Variable(labels[:, dim]).cuda(gpu)
+    label_cont = Variable(cont_labels[:, dim]).cuda(gpu)
+
+    loss_cls = criterion(preds, label)
+    predicted = softmax(preds)
+    predicted = torch.sum(predicted * idx_tensor, 1) * 3 - 99
+    loss_reg = reg_criterion(predicted, label_cont)
+    loss = loss_cls + alpha * loss_reg
+
+    return loss
+
+
+def compute_error(axis, cont_labels, preds, idx_tensor):
+
+    if axis == "yaw":
+        dim = 0
+    elif axis == "pitch":
+        dim = 1
+    elif axis == "roll":
+        dim = 2
+    else:
+        raise IndexError("{} is not in ['yaw', 'pitch', 'roll']".format(axis))
+
+    label_cont = cont_labels[:, dim].float()
+    predictions = utils.softmax_temperature(preds.data, 1)
+    predictions = torch.sum(predictions * idx_tensor, 1).cpu() * 3 - 99
+    error = torch.sum(torch.abs(predictions - label_cont))
+
+    return error
+
+
+def train(args, train_loader, model, criterion,
+          reg_criterion, idx_tensor, optimizer,
+          scheduler, epoch, num_epochs, batch_num):
+
+    for i, (images, labels, cont_labels, name) in enumerate(train_loader):
+        images = Variable(images).cuda(gpu)
+
+        # Forward pass
+        yaw, pitch, roll = model(images)
+
+        # losses
+        loss_yaw = compute_loss(
+            args, "yaw", labels, cont_labels, yaw, criterion,
+            reg_criterion, idx_tensor, gpu)
+        loss_pitch = compute_loss(
+            args, "pitch", labels, cont_labels, pitch, criterion,
+            reg_criterion, idx_tensor, gpu)
+        loss_roll = compute_loss(
+            args, "roll", labels, cont_labels, roll, criterion,
+            reg_criterion, idx_tensor, gpu)
+
+        loss_seq = [loss_yaw, loss_pitch, loss_roll]
+        grad_seq = [torch.tensor(1.0).cuda(gpu) for _ in
+                    range(len(loss_seq))]
+        optimizer.zero_grad()
+        torch.autograd.backward(loss_seq, grad_seq)
+        optimizer.step()
+        scheduler.step()
+
+        if (i + 1) % 100 == 0:
+            print('Epoch [{:d}/{:d}] Iter [{:d}/{:d}] Losses:',
+                  'Yaw {:4f}, Pitch {:4f}, Roll {:4f}'.format(
+                      epoch + 1, num_epochs,
+                      i + 1, batch_num,
+                      loss_yaw.data[0], loss_pitch.data[0], loss_roll.data[0]))
+
+
+def valid(valid_loader, model, idx_tensor):
+
+    model.eval()
+    total, yaw_error, pitch_error, roll_error = 0, 0.0, 0.0, 0.0
+
+    for i, (images, labels, cont_labels, name) in enumerate(valid_loader):
+
+        with torch.no_grad():
+            images = Variable(images).cuda(gpu)
+            total += cont_labels.size(0)
+            # Forward pass
+            yaw, pitch, roll = model(images)
+            yaw_error += compute_error(
+                "yaw", cont_labels, yaw, idx_tensor)
+            pitch_error += compute_error(
+                "pitch", cont_labels, pitch, idx_tensor)
+            roll_error += compute_error(
+                "roll", cont_labels, roll, idx_tensor)
+
+    print('Valid error in degrees ' +
+          str(total) +
+          ' test images. Yaw: {:4f}, Pitch: {:4f}, Roll: {:4f}'.format(
+              yaw_error / total, pitch_error / total, roll_error / total))
 
 
 if __name__ == '__main__':
@@ -238,65 +344,20 @@ if __name__ == '__main__':
          {'params': get_fc_params(model), 'lr': args.lr * 5}],
         lr=args.lr)
 
-    scheduler = StepLR(optimizer, 6, gamma=0.1, last_epoch=-1)
+    scheduler = MultiStepLR(optimizer, milestones=[8, 18], gamma=0.1)
 
     print('Ready to train network.')
 
     for epoch in range(num_epochs):
-        for i, (images, labels, cont_labels, name) in enumerate(train_loader):
-            images = Variable(images).cuda(gpu)
 
-            # Binned labels
-            label_yaw = Variable(labels[:, 0]).cuda(gpu)
-            label_pitch = Variable(labels[:, 1]).cuda(gpu)
-            label_roll = Variable(labels[:, 2]).cuda(gpu)
+        train(args, train_loader, model, criterion, reg_criterion,
+              idx_tensor, optimizer, scheduler, epoch, num_epochs,
+              len(train_dataset) // batch_size)
 
-            # Continuous labels
-            label_yaw_cont = Variable(cont_labels[:, 0]).cuda(gpu)
-            label_pitch_cont = Variable(cont_labels[:, 1]).cuda(gpu)
-            label_roll_cont = Variable(cont_labels[:, 2]).cuda(gpu)
+        valid(valid_loader, model, idx_tensor)
 
-            # Forward pass
-            yaw, pitch, roll = model(images)
-
-            # Cross entropy loss
-            loss_yaw = criterion(yaw, label_yaw)
-            loss_pitch = criterion(pitch, label_pitch)
-            loss_roll = criterion(roll, label_roll)
-
-            # MSE loss
-            yaw_predicted = softmax(yaw)
-            pitch_predicted = softmax(pitch)
-            roll_predicted = softmax(roll)
-
-            yaw_predicted = torch.sum(yaw_predicted * idx_tensor, 1) * 3 - 99
-            pitch_predicted = torch.sum(pitch_predicted * idx_tensor, 1) * 3 - 99
-            roll_predicted = torch.sum(roll_predicted * idx_tensor, 1) * 3 - 99
-
-            loss_reg_yaw = reg_criterion(yaw_predicted, label_yaw_cont)
-            loss_reg_pitch = reg_criterion(pitch_predicted, label_pitch_cont)
-            loss_reg_roll = reg_criterion(roll_predicted, label_roll_cont)
-
-            # Total loss
-            loss_yaw += alpha * loss_reg_yaw
-            loss_pitch += alpha * loss_reg_pitch
-            loss_roll += alpha * loss_reg_roll
-
-            loss_seq = [loss_yaw, loss_pitch, loss_roll]
-            grad_seq = [torch.tensor(1.0).cuda(gpu) for _ in range(len(loss_seq))]
-            optimizer.zero_grad()
-            torch.autograd.backward(loss_seq, grad_seq)
-            optimizer.step()
-            scheduler.step()
-
-            if (i + 1) % 100 == 0:
-                print('Epoch [%d/%d], Iter [%d/%d] Losses: Yaw %.4f, Pitch %.4f, Roll %.4f'
-                       %(epoch+1, num_epochs, i+1, len(train_dataset) // batch_size, loss_yaw.data[0], loss_pitch.data[0], loss_roll.data[0]))
-
-        # Save models at numbered epochs.
-        if epoch % 1 == 0 and epoch < num_epochs:
-            print('Taking snapshot...')
-            torch.save(
-                model.state_dict(),
-                'output/snapshots/' + args.output_string +
-                '_epoch_' + str(epoch+1) + '.pkl')
+        print('Saving checkpoint...')
+        torch.save(
+            model.state_dict(),
+            'output/snapshots/' + args.output_string +
+            '_epoch_' + str(epoch+1) + '.pkl')
