@@ -110,7 +110,7 @@ class ShuffleNetV2(nn.Module):
         self.fc_pitch = nn.Linear(output_channels, num_classes)
         self.fc_roll = nn.Linear(output_channels, num_classes)
 
-        self.fc = nn.Linear(output_channels, num_classes)
+        self.fc = nn.Linear(output_channels, 1000)
 
     def forward(self, x):
         x = self.conv1(x)
