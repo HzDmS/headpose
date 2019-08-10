@@ -54,8 +54,8 @@ AFLW2000 and 300W_LP can be downloaded [here](http://www.cbsr.ia.ac.cn/users/xia
 ```bash
 mkdir data
 cd data
-unzip AFLW2000-3D.zip .
-unzip 300W-LP.zip .
+unzip AFLW2000-3D.zip
+unzip 300W-LP.zip
 ```
 
 ### Preprocess

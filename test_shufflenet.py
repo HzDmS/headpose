@@ -19,6 +19,9 @@ import utils
 
 from mobilenet import mobilenetv3_large
 
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+
 
 def parse_args():
     """Parse input arguments."""
@@ -79,7 +82,7 @@ if __name__ == '__main__':
     snapshot_path = args.snapshot
 
     # ResNet50 structure
-    model = mobilenetv3_large(num_classes=66)
+    model = ShuffleNetV2([4, 8, 4], [24, 116, 232, 464, 1024], num_classes=66)
 
     print('Loading snapshot.')
     # Load snapshot

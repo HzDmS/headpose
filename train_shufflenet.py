@@ -10,11 +10,14 @@ import torch.utils.model_zoo as model_zoo
 import datasets
 import utils
 
-from mobilenet import mobilenetv3_large
+from shufflenetv2 import ShuffleNetV2
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torch.optim.lr_scheduler import MultiStepLR
+
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 
 
 def parse_args():
@@ -86,7 +89,7 @@ def parse_args():
 
 def get_ignored_params(model):
     # Generator function that yields ignored params.
-    b = [model.features]
+    b = [model.conv1, model.fc]
     for i in range(len(b)):
         for module_name, module in b[i].named_modules():
             if 'bn' in module_name:
@@ -97,11 +100,20 @@ def get_ignored_params(model):
 
 def get_non_ignored_params(model):
     # Generator function that yields params that will be optimized.
-    b = [model.conv, model.middle]
+    b = [model.stage1, model.stage2, model.stage3, model.stage4, model.conv5]
     for i in range(len(b)):
         for module_name, module in b[i].named_modules():
             if 'bn' in module_name:
                 module.eval()
+            for name, param in module.named_parameters():
+                yield param
+
+
+def get_fc_params(model):
+    # Generator function that yields fc layer params.
+    b = [model.fc_yaw, model.fc_pitch, model.fc_yaw]
+    for i in range(len(b)):
+        for module_name, module in b[i].named_modules():
             for name, param in module.named_parameters():
                 yield param
 
@@ -112,15 +124,6 @@ def load_filtered_state_dict(model, snapshot):
     snapshot = {k: v for k, v in snapshot.items() if k in model_dict}
     model_dict.update(snapshot)
     model.load_state_dict(model_dict)
-
-
-def get_fc_params(model):
-    # Generator function that yields fc layer params.
-    b = [model.lin_yaw, model.lin_pitch, model.lin_pitch]
-    for i in range(len(b)):
-        for module_name, module in b[i].named_modules():
-            for name, param in module.named_parameters():
-                yield param
 
 
 def compute_loss(args, axis, labels, cont_labels, preds, cls_criterion,
@@ -239,11 +242,12 @@ if __name__ == '__main__':
         os.makedirs('output/snapshots')
 
     # net structure
-    model = mobilenetv3_large(num_classes=66)
+    model = ShuffleNetV2([4, 8, 4], [24, 116, 232, 464, 1024], num_classes=66)
 
     if args.snapshot == '':
         load_filtered_state_dict(model, model_zoo.load_url(
-            'https://download.pytorch.org/models/mobilenet_v2-b0353104.pth'))
+            'https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth'
+        ))
     else:
         saved_state_dict = torch.load(args.snapshot)
         model.load_state_dict(saved_state_dict)
