@@ -84,6 +84,45 @@ def parse_args():
     return args
 
 
+def get_ignored_params(model):
+    # Generator function that yields ignored params.
+    b = [model.features]
+    for i in range(len(b)):
+        for module_name, module in b[i].named_modules():
+            if 'bn' in module_name:
+                module.eval()
+            for name, param in module.named_parameters():
+                yield param
+
+
+def get_non_ignored_params(model):
+    # Generator function that yields params that will be optimized.
+    b = [model.conv, model.middle]
+    for i in range(len(b)):
+        for module_name, module in b[i].named_modules():
+            if 'bn' in module_name:
+                module.eval()
+            for name, param in module.named_parameters():
+                yield param
+
+
+def load_filtered_state_dict(model, snapshot):
+    # By user apaszke from discuss.pytorch.org
+    model_dict = model.state_dict()
+    snapshot = {k: v for k, v in snapshot.items() if k in model_dict}
+    model_dict.update(snapshot)
+    model.load_state_dict(model_dict)
+
+
+def get_fc_params(model):
+    # Generator function that yields fc layer params.
+    b = [model.lin_yaw, model.lin_pitch, model.lin_pitch]
+    for i in range(len(b)):
+        for module_name, module in b[i].named_modules():
+            for name, param in module.named_parameters():
+                yield param
+
+
 def compute_loss(args, axis, labels, cont_labels, preds, cls_criterion,
                  reg_criterion, idx_tensor, gpu):
 
@@ -202,6 +241,13 @@ if __name__ == '__main__':
     # net structure
     model = mobilenetv3_large(num_classes=66)
 
+    if args.snapshot == '':
+        load_filtered_state_dict(model, model_zoo.load_url(
+            'https://download.pytorch.org/models/mobilenet_v2-b0353104.pth'))
+    else:
+        saved_state_dict = torch.load(args.snapshot)
+        model.load_state_dict(saved_state_dict)
+
     print('Loading data.')
 
     transformations = transforms.Compose(
@@ -292,7 +338,11 @@ if __name__ == '__main__':
     idx_tensor = [idx for idx in range(66)]
     idx_tensor = Variable(torch.FloatTensor(idx_tensor)).cuda(gpu)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(
+        [{'params': get_ignored_params(model), 'lr': 0},
+         {'params': get_non_ignored_params(model), 'lr': args.lr},
+         {'params': get_fc_params(model), 'lr': args.lr * 5}],
+        lr=args.lr)
 
     scheduler = MultiStepLR(optimizer, milestones=[8, 18], gamma=0.1)
 
