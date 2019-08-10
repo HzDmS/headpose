@@ -88,7 +88,11 @@ a text file named 'filename_list.txt' will be stored in corresponding dataset.
 
 ### Download Pre-trained Model.
 
-Pre-trained model of my approach can be downloaded via google drive [link](https://drive.google.com/file/d/1mWbCBsXWPVGNSoXAKlQOkvYOcjUNIvwC/view?usp=sharing).
+Pre-trained model of my approach can be downloaded via google drive [link](https://drive.google.com/file/d/1q9Js-_jjrkX_XNW21E3Snk20kdSl7gO0/view?usp=sharing).
+
+```bash
+unzip checkpoints.zip
+```
 
 ### Train
 
@@ -160,6 +164,18 @@ Here, I conducted experiment on [ShuffleNet V2](https://arxiv.org/abs/1807.11164
 |---|---|---|---|---|
 | ShuffleNetv2 ($\alpha=2$)  | 9.004  |  7.527 | 6.967 | 7.562 |
 | ResNet-50 ($\alpha=2$) | **5.275** |  **6.138** | **4.852** | **5.422** |
+
+### Download Pre-trained Model.
+
+**NOTE** This step can be ignored if you have already downloaded checkpoints in the first task, as two checkpoints are downloaded together.
+
+If not, go ahead.
+
+Pre-trained model of my approach can be downloaded via google drive [link](https://drive.google.com/file/d/1q9Js-_jjrkX_XNW21E3Snk20kdSl7gO0/view?usp=sharing).
+
+```bash
+unzip checkpoints.zip
+```
 
 ### Reproduce My Results
 
