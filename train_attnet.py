@@ -196,8 +196,8 @@ def train(args, train_loader, model, criterion,
         scheduler.step()
 
         if (i + 1) % 100 == 0:
-            print('Epoch [{:d}/{:d}] Iter [{:d}/{:d}] Losses:',
-                  'Yaw {:4f}, Pitch {:4f}, Roll {:4f}'.format(
+            print(('Epoch [{:d}/{:d}] Iter [{:d}/{:d}] Losses:' +
+                   'Yaw {:4f}, Pitch {:4f}, Roll {:4f}').format(
                       epoch + 1, num_epochs,
                       i + 1, batch_num,
                       loss_yaw.data[0], loss_pitch.data[0], loss_roll.data[0]))
