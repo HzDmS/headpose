@@ -250,10 +250,10 @@ class AFLW2000(Dataset):
         # Crop the face loosely
         pt2d = utils.get_pt2d_from_mat(mat_path)
 
-        x_min = min(pt2d[0,:])
-        y_min = min(pt2d[1,:])
-        x_max = max(pt2d[0,:])
-        y_max = max(pt2d[1,:])
+        x_min = min(pt2d[0, :])
+        y_min = min(pt2d[1, :])
+        x_max = max(pt2d[0, :])
+        y_max = max(pt2d[1, :])
 
         k = 0.20
         x_min -= 2 * k * abs(x_max - x_min)

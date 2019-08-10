@@ -8,12 +8,12 @@ import torch.backends.cudnn as cudnn
 import torch.utils.model_zoo as model_zoo
 
 import datasets
-import utils
 
 from model_resnet import ResidualNet
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision import transforms
+from torch.optim.lr_scheduler import StepLR
 
 
 def parse_args():
@@ -238,6 +238,8 @@ if __name__ == '__main__':
          {'params': get_fc_params(model), 'lr': args.lr * 5}],
         lr=args.lr)
 
+    scheduler = StepLR(optimizer, 6, gamma=0.1, last_epoch=-1)
+
     print('Ready to train network.')
 
     for epoch in range(num_epochs):
@@ -285,6 +287,7 @@ if __name__ == '__main__':
             optimizer.zero_grad()
             torch.autograd.backward(loss_seq, grad_seq)
             optimizer.step()
+            scheduler.step()
 
             if (i + 1) % 100 == 0:
                 print('Epoch [%d/%d], Iter [%d/%d] Losses: Yaw %.4f, Pitch %.4f, Roll %.4f'
