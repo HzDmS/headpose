@@ -2,22 +2,17 @@ import sys
 import os
 import argparse
 
-import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 
 import torch
-import torch.nn as nn
 from torch.autograd import Variable
-from torch.utils.data import DataLoader
 from torchvision import transforms
 import torch.backends.cudnn as cudnn
-import torch.nn.functional as F
 
 import datasets
 import utils
 
-from mobilenet import mobilenetv3_large
+from shufflenetv2 import ShuffleNetV2
 
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "4"

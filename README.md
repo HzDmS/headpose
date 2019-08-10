@@ -21,13 +21,13 @@ Personally, I think the official implementation of [HopeNet](https://github.com/
 
 ### Network Architecture
 
-Although it is not easy to come up with some brand-new ideas regarding network architecture, there are still some simple-yet-effective methods that we could adopt in this model. One common practice is to add attention module in the CNN, and there are couples of such approaches available, such as channel-wise attention and spatial attention. Here, I adopt the lately introduced attention module, [CBAM](https://arxiv.org/pdf/1807.06521.pdf). In the paper, the author reported a clear increase in performance after adding the CBAM module into ResNet-50. Thus, I also expect that CBAM can help with improving the performance of ResNet-50 used in head pose estimation task.
+Although it is not easy to come up with some brand-new ideas regarding network architecture, there are still some simple-yet-effective methods that we could adopt in this model. One common practice is to add attention module in the CNN, and there are couples of such approaches available, such as channel-wise attention and spatial attention. Here, I adopt the lately introduced attention module, [CBAM](https://arxiv.org/pdf/1807.06521.pdf). In the paper, the author reported a clear increase in performance after adding the CBAM module into ResNet-50. Thus, I also expect that CBAM can help with improving the performance of the ResNet-50 used in  this head-pose estimation task.
 
 ## Implementation
 
 ### Coding Convention
 
-I found the official implementation didn't following any coding convention, and most scripts in it can't pass the flake8 check. Thus, I re-rewrote some scripts, following the google coding style.
+I found the official implementation of HopeNet didn't following any coding convention, and most scripts in it can't pass the flake8 check. Thus, I re-rewrote some scripts, following the google coding style.
 
 ### Train / Validation Split
 
@@ -35,7 +35,7 @@ In my implementation, the 300W_LP dataset is randomly split into two sets by a t
 
 ### Learning Rate Decay.
 
-The initial learning rate is set to 1e-5, and the model will be trained for 25 epochs, as suggested in the paper. In my implementation, after the 8th epoch, the learning rate will be set to 1e-6. And after the 18th epoch, it will be set to 1e-7.
+The initial learning rate is set to 1e-5, and the model will be trained for 25 epochs in total, as suggested in the paper. In my implementation, after the 8th epoch, the learning rate will be set to 1e-6. And after the 18th epoch, it will be set to 1e-7.
 
 ### CBAM
 
@@ -58,7 +58,22 @@ unzip AFLW2000-3D.zip
 unzip 300W-LP.zip
 ```
 
+### Dependencies
+
+python == 3.5
+numpy == 1.16.1
+opencv-python == 4.0.0.21
+torch = 1.0.1
+torchvision == 0.4.0+cu92
+pandas == 0.24.1
+Pillow == 5.4.1
+scipy == 1.2.0
+
+**NOTE** Since I only have a GPU with cuda-9.0, the pytorch version 1.0.1 is specially compiled for this cuda version. I guess the code is also compatible with other cuda & pytorch versions, but I didn't test it.
+
 ### Preprocess
+
+To produce the filename_list.txt, run the command below,
 
 ```bash
 python filename_generator.py --dataset DATASET --dataset_path PATH
@@ -100,12 +115,12 @@ python test_attnet.py \
 --batch_size 32 \
 --data_dir ./data/AFLW2000/ \
 --filename_list ./data/AFLW2000/filename_list.txt \
---snapshot ./checkpoint.pkl
+--snapshot ./checkpoints/resnet.pkl
 ```
 
 **NOTE** checkpoint.pkl is the pre-trained checkpoint downloaded via the google drive link mentioned above.
 
-## Performance.
+## Results & Comparison
 
 The proposed model is trained for 25 epochs with initial learning rate 0.00001, batch size 32. **NOTE** that the scores of the original HopeNet are directly from the paper. According to the response of the author on github, he used batch size 128 to training the HopeNet. However, since I only have a GPU with 8GB RAM, training with batch size 128 will invoke 'out of memory' error. Thus, I only trained my method with a batch size of 32. I believe that performance of my method can be further boosted with a larger batch size.
 
@@ -134,14 +149,26 @@ Here, I conducted experiment on [ShuffleNet V2](https://arxiv.org/abs/1807.11164
 
 ## Comparison Between ResNet-50 and ShuffleNet V2
 
-|Model|#Params|
-|---|---|
-|ResNet-50|26.5M|
-|ShuffleNet V2|2.5M|
+|Model|#Params|Checkpoint Size|
+|---|---|---|
+|ResNet-50|26.5M|112MB|
+|ShuffleNet V2|2.5M|11MB|
 
 ## Results
 
 |  Backbone |  Yaw |  Pitch |  Roll |  MAE  |
 |---|---|---|---|---|
-| ShuffleNetv2 ($\alpha=2$)  |  5.275 |  6.138 | 4.852 | 5.422|
-| ResNet-50 ($\alpha=2$)  | 6.470  |  6.559 | 5.436  |6.155|
+| ShuffleNetv2 ($\alpha=2$)  | 9.004  |  7.527 | 6.967 | 7.562 |
+| ResNet-50 ($\alpha=2$) | **5.275** |  **6.138** | **4.852** | **5.422** |
+
+### Reproduce My Results
+
+```bash
+python test_shufflenet.py \
+--gpu 0 \
+--dataset AFLW2000 \
+--batch_size 32 \
+--data_dir ./data/AFLW2000/ \
+--filename_list ./data/AFLW2000/filename_list.txt \
+--snapshot ./checkpoints/shufflenet.pkl
+```
