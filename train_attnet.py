@@ -168,7 +168,7 @@ def compute_error(axis, cont_labels, preds, idx_tensor):
 
 def train(args, train_loader, model, criterion,
           reg_criterion, idx_tensor, optimizer,
-          scheduler, epoch, num_epochs, batch_num):
+          epoch, num_epochs, batch_num):
 
     for i, (images, labels, cont_labels, name) in enumerate(train_loader):
         images = Variable(images).cuda(gpu)
@@ -193,7 +193,6 @@ def train(args, train_loader, model, criterion,
         optimizer.zero_grad()
         torch.autograd.backward(loss_seq, grad_seq)
         optimizer.step()
-        scheduler.step()
 
         if (i + 1) % 100 == 0:
             print(('Epoch [{:d}/{:d}] Iter [{:d}/{:d}] Losses:' +
@@ -353,8 +352,8 @@ if __name__ == '__main__':
         train(args, train_loader, model, criterion, reg_criterion,
               idx_tensor, optimizer, scheduler, epoch, num_epochs,
               len(train_dataset) // batch_size)
-
         valid(valid_loader, model, idx_tensor)
+        scheduler.step()
 
         print('Saving checkpoint...')
         torch.save(
