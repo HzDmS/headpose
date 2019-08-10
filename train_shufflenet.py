@@ -100,7 +100,7 @@ def get_ignored_params(model):
 
 def get_non_ignored_params(model):
     # Generator function that yields params that will be optimized.
-    b = [model.stage1, model.stage2, model.stage3, model.stage4, model.conv5]
+    b = [model.stage2, model.stage3, model.stage4, model.conv5]
     for i in range(len(b)):
         for module_name, module in b[i].named_modules():
             if 'bn' in module_name:
