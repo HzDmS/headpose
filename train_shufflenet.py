@@ -202,7 +202,7 @@ def train(args, train_loader, model, criterion,
                    'Yaw {:4f}, Pitch {:4f}, Roll {:4f}').format(
                       epoch + 1, num_epochs,
                       i + 1, batch_num,
-                      loss_yaw.data[0], loss_pitch.data[0], loss_roll.data[0]))
+                      loss_yaw.item(), loss_pitch.item(), loss_roll.item()))
 
 
 def valid(valid_loader, model, idx_tensor):
