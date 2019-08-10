@@ -1,4 +1,4 @@
-python test_hopenet.py \
+python test_attnet.py \
 --gpu 0 \
 --dataset AFLW2000 \
 --batch_size 16 \

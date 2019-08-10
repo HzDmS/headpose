@@ -242,7 +242,8 @@ if __name__ == '__main__':
     model = ResidualNet("ImageNet", 50, 66, "CBAM")
 
     if args.snapshot == '':
-        load_filtered_state_dict(model, model_zoo.load_url('https://download.pytorch.org/models/resnet50-19c8e357.pth'))
+        load_filtered_state_dict(model, model_zoo.load_url(
+            'https://download.pytorch.org/models/resnet50-19c8e357.pth'))
     else:
         saved_state_dict = torch.load(args.snapshot)
         model.load_state_dict(saved_state_dict)
