@@ -350,7 +350,7 @@ if __name__ == '__main__':
     for epoch in range(num_epochs):
 
         train(args, train_loader, model, criterion, reg_criterion,
-              idx_tensor, optimizer, scheduler, epoch, num_epochs,
+              idx_tensor, optimizer, epoch, num_epochs,
               len(train_dataset) // batch_size)
         valid(valid_loader, model, idx_tensor)
         scheduler.step()
