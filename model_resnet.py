@@ -233,4 +233,5 @@ def ResidualNet(network_type, depth, num_classes, att_type):
 if __name__ == "__main__":
 
     model = ResidualNet("ImageNet", 50, 66, "CBAM")
-    print(model)
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    print(pytorch_total_params)

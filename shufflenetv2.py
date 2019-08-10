@@ -129,4 +129,5 @@ class ShuffleNetV2(nn.Module):
 if __name__ == "__main__":
     model = ShuffleNetV2(
         [4, 8, 4], [24, 116, 232, 464, 1024], num_classes=66)
-    print(model)
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    print(pytorch_total_params)

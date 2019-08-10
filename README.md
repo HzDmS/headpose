@@ -114,4 +114,34 @@ The proposed model is trained for 25 epochs with initial learning rate 0.00001, 
 | Mine ($\alpha=2$)  |  **5.275** |  **6.138** |  **4.852** | **5.422**|
 | HopeNet ($\alpha=2$)  | 6.470  |  6.559 | 5.436  |6.155|
 
-As shown in the table above, the performance of my method outperforms the original HopeNet with a great margin in every aspect.
+As shown in the table above, my method outperforms the original HopeNet with a great margin in every aspect.
+
+# TASK 2: Simplify The Backbone
+
+## Overview
+
+There are couples of solutions available out there about the simplification of CNN architecture. Several candicates are:
+
+- MobileNet https://arxiv.org/abs/1704.04861
+- ShuffleNet https://arxiv.org/abs/1707.01083
+- CondenseNet https://arxiv.org/abs/1711.09224
+- EfficientNet https://arxiv.org/abs/1905.11946
+- ...
+
+All of them are relatively lighter than ResNet and VGG-Net, with negligible loss of performance.
+
+Here, I conducted experiment on [ShuffleNet V2](https://arxiv.org/abs/1807.11164).
+
+## Comparison Between ResNet-50 and ShuffleNet V2
+
+|Model|#Params|
+|---|---|
+|ResNet-50|26.5M|
+|ShuffleNet V2|2.5M|
+
+## Results
+
+|  Backbone |  Yaw |  Pitch |  Roll |  MAE  |
+|---|---|---|---|---|
+| ShuffleNetv2 ($\alpha=2$)  |  5.275 |  6.138 | 4.852 | 5.422|
+| ResNet-50 ($\alpha=2$)  | 6.470  |  6.559 | 5.436  |6.155|
