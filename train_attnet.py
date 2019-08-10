@@ -297,39 +297,3 @@ if __name__ == '__main__':
                 model.state_dict(),
                 'output/snapshots/' + args.output_string +
                 '_epoch_' + str(epoch+1) + '.pkl')
-
-            total, yaw_error, pitch_error, roll_error = 0, 0.0, 0.0, 0.0
-
-            for i, (images, labels,
-                    cont_labels, name) in enumerate(valid_loader):
-                images = Variable(images).cuda(gpu)
-                total += cont_labels.size(0)
-
-                label_yaw = cont_labels[:, 0].float()
-                label_pitch = cont_labels[:, 1].float()
-                label_roll = cont_labels[:, 2].float()
-
-                yaw, pitch, roll = model(images)
-
-                # Binned predictions
-                _, yaw_bpred = torch.max(yaw.data, 1)
-                _, pitch_bpred = torch.max(pitch.data, 1)
-                _, roll_bpred = torch.max(roll.data, 1)
-
-                # Continuous predictions
-                yaw_predicted = utils.softmax_temperature(yaw.data, 1)
-                pitch_predicted = utils.softmax_temperature(pitch.data, 1)
-                roll_predicted = utils.softmax_temperature(roll.data, 1)
-
-                yaw_predicted = torch.sum(yaw_predicted * idx_tensor, 1).cpu() * 3 - 99
-                pitch_predicted = torch.sum(pitch_predicted * idx_tensor, 1).cpu() * 3 - 99
-                roll_predicted = torch.sum(roll_predicted * idx_tensor, 1).cpu() * 3 - 99
-
-                # Mean absolute error
-                yaw_error += torch.sum(torch.abs(yaw_predicted - label_yaw))
-                pitch_error += torch.sum(torch.abs(pitch_predicted - label_pitch))
-                roll_error += torch.sum(torch.abs(roll_predicted - label_roll))
-
-            print('Test error in degrees of the model on the ' + str(total) +
-            ' test images. Yaw: %.4f, Pitch: %.4f, Roll: %.4f' % (yaw_error / total,
-            pitch_error / total, roll_error / total))
