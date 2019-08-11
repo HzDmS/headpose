@@ -47,7 +47,7 @@ As the author didn't provide the script to produce filename_list.txt, I wrote it
 
 ## How To Use
 
-### Download dataset.
+### Download datasets.
 
 AFLW2000 and 300W_LP can be downloaded [here](http://www.cbsr.ia.ac.cn/users/xiangyuzhu/projects/3DDFA/main.htm).
 
@@ -188,3 +188,7 @@ python test_shufflenet.py \
 --filename_list ./data/AFLW2000/filename_list.txt \
 --snapshot ./checkpoints/shufflenet.pkl
 ```
+
+### Sidenote
+
+It is totally possible to further improve the performance of the compact model. For example, increasing the batch size, training for more epochs, or replacing ShuffleNet with EfficientNet, etc.

@@ -3,4 +3,4 @@ __pycache__/
 output/
 data/
 .DS_Store
-checkpoints.zip
+checkpoints/
